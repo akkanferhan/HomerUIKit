@@ -8,9 +8,9 @@ import CoreGraphics
 /// custom look.
 public struct ShadowStyle: Sendable, Hashable {
 
-    /// Shadow colour token. Resolved via ``TokenColor/uiColor`` at
+    /// Shadow colour. Resolved via ``DesignColor/uiColor`` at
     /// application time.
-    public let color: TokenColor
+    public let color: DesignColor
 
     /// Shadow opacity (`0...1`). Maps to `CALayer.shadowOpacity`.
     public let opacity: Float
@@ -23,7 +23,7 @@ public struct ShadowStyle: Sendable, Hashable {
 
     /// Creates a shadow style.
     public init(
-        color: TokenColor,
+        color: DesignColor,
         opacity: Float,
         offset: CGSize,
         radius: CGFloat
