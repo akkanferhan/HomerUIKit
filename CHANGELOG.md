@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-26
+
+Naming cleanup and helper expansion. The `Tokens` namespace and `TokenColor` type are renamed to `Design` / `DesignColor` to better reflect the layer they form, and the short-lived `Reusable` protocol introduced in v0.2.0 is collapsed into an inline `T.description()` lookup. `AlertConfigurable` / `AlertShowable` and `UIApplication.topMostViewController` round out a long-standing alert-presentation gap harvested from FamilyAI.
+
+### Added
+
+- **`AlertConfigurable`** — `@MainActor` protocol describing the data needed to build a `UIAlertController` (style, title, message, actions). Adopt on a value type and pass it to ``AlertShowable``.
+- **`AlertShowable`** — `@MainActor` protocol with two presentation paths: a default ``presentAlert(with:)`` that targets the application's top-most view controller (no-op when no scene is foreground-active), and a `where Self: UIViewController` overload ``showAlert(with:)`` that presents on `self`. Both configure the iPad popover anchor automatically.
+- **`UIApplication.topMostViewController`** — `@MainActor` extension property that walks the foreground-active scene's key window and unwraps presentation, navigation, and tab-bar containers to reach the visible view controller. Internal `topMost(from:)` helper exposed to `@testable` consumers.
+
+### Changed
+
+- **Breaking — folder rename: `Sources/HomerUIKit/Tokens/` → `Sources/HomerUIKit/Design/`** (mirrored on the test side). Public API names are unchanged for `Spacing`, `CornerRadius`, `AnimationDuration`, `BorderStyle`, `ShadowStyle`, `Alpha`. No source migration required for callers; only repo-relative path references break.
+- **Breaking — type rename: `TokenColor` → `DesignColor`.** All references inside `BorderStyle.color` / `ShadowStyle.color`, DocC comments, and tests updated. Migration: search-and-replace `TokenColor` → `DesignColor`. Behaviour unchanged.
+- **Breaking — `Reusable` protocol removed.** v0.2.0's `public protocol Reusable` (exposing `static var reuseIdentifier: String`) is gone. The typed `register(_:)` and `dequeueReusableCell<T>(for:)` helpers on `UITableView` and `UICollectionView` now use `T.description()` (NSObject's class-name method) inline. Migration: drop any `Reusable` references; if you overrode `reuseIdentifier`, override `description()` instead. Source files renamed `UI{Table,Collection}View+Reusable.swift` → `UI{Table,Collection}View+Dequeue.swift`.
+
+### Project conventions (unchanged)
+
+- No `Homer`/`FA` prefix.
+- Design types stay UIKit-free at the type level; only resolver methods touch `@MainActor`.
+- `0.x.y` treats public symbols as semver-stable.
+
+### Known limitations / planned for v0.4.0
+
+- `applyShadow(_:withCornerRadius:)` still requires a manual `updateShadowPathIfNeeded()` after bounds changes.
+- `border(_:)` still does not auto-refresh `borderColor` on trait-collection changes.
+
 ## [0.2.0] — 2026-04-26
 
 Additions driven by patterns harvested from real iOS apps in the Homer ecosystem (FamilyAI). Tightens the existing surface (one breaking refinement to `Spacing.custom`) and broadens coverage to opacity tokens, hex colours, dimension helpers, stack-view ergonomics, and typed cell dequeuing.
@@ -64,6 +91,7 @@ Initial release. UIKit extensions and design tokens for the Homer suite, built o
 - `border(_:)` does not auto-refresh `borderColor` on trait-collection changes (light/dark mode); re-apply in `traitCollectionDidChange(_:)` if you need it.
 - No `UIStackView.addArrangedSubviews(_:)` helper yet.
 
-[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.3.0
 [0.2.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.2.0
 [0.1.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.1.0
