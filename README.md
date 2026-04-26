@@ -5,7 +5,7 @@ Modern Swift 6 / iOS 18 UIKit kit for the Homer suite of Apple apps. A consolida
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+
 - **Tests:** Swift Testing
-- **Status:** `0.1.0` — public API documented with DocC, 98 tests, 0 warnings
+- **Status:** `0.2.0` — public API documented with DocC, 130 tests, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.1.0")
+    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.2.0")
 ]
 ```
 
@@ -49,7 +49,8 @@ Pure-value, `Sendable` tokens that eliminate magic numbers and strings.
 
 ```swift
 let inset = Spacing.medium.value           // 16
-let oneOff = Spacing.custom(13)            // 13 — explicit escape hatch
+let oneOff = Spacing.custom(13).value      // 13 — explicit escape hatch
+view.pinToSuperview(spacing: .custom(6))   // pass through token-accepting APIs
 ```
 
 ### `CornerRadius`
@@ -65,6 +66,15 @@ let r = CornerRadius.medium.resolved(forHeight: 0)  // 8
 ### `AnimationDuration`
 
 `.fast (0.15) / .standard (0.25) / .slow (0.40) / .custom(TimeInterval)`. `allCases` enumerates only the pre-baked tiers.
+
+### `Alpha`
+
+10 % increments from `.p10` (0.1) to `.p100` (1.0), plus `.custom(CGFloat)` clamped to `0...1` at resolve time.
+
+```swift
+view.alpha = Alpha.p50.value               // 0.5
+let dim = UIColor.systemRed.withAlphaComponent(Alpha.p20.value)
+```
 
 ### `TokenColor`
 
@@ -150,6 +160,18 @@ container.addSubviews(headerLabel, bodyLabel, footerView)
 container.addSubviews([item1, item2])      // array overload
 ```
 
+### Dimensions
+
+Chainable, all set `translatesAutoresizingMaskIntoConstraints = false`.
+
+```swift
+view
+    .setSize(width: 44, height: 44)
+    .setMinimumHeight(60)
+
+avatar.setWidth(40).setHeight(40)
+```
+
 ### `UIEdgeInsets+Spacing`
 
 ```swift
@@ -158,6 +180,37 @@ let mixed = UIEdgeInsets(horizontal: .small, vertical: .large)
 let raw = UIEdgeInsets(horizontal: 13, vertical: 7)  // escape hatch
 ```
 
+## `UIStackView` extensions
+
+```swift
+let stack = UIStackView()
+stack.addArrangedSubviews(headerLabel, divider, bodyLabel)
+stack.addArrangedSubviews([item1, item2])  // array overload
+```
+
+## `UIColor` extensions
+
+`UIColor(hex:)` is a failable initializer that parses 6- or 8-character hex strings (RGB / RGBA), with or without a leading `#`. Whitespace is trimmed; invalid input returns `nil`.
+
+```swift
+let brand = UIColor(hex: "#FF6F00")        // RGB
+let glassy = UIColor(hex: "FF6F0080")      // RGBA — 50 % alpha
+let invalid = UIColor(hex: "not a color")  // nil
+```
+
+## Reusable cells
+
+A lightweight `Reusable` protocol gives `UITableViewCell` and `UICollectionViewCell` (via `UICollectionReusableView`) a default reuse identifier — the runtime type name — so registration and dequeuing become type-safe one-liners.
+
+```swift
+final class ProductCell: UICollectionViewCell {}
+
+collectionView.register(ProductCell.self)
+let cell: ProductCell = collectionView.dequeueReusableCell(for: indexPath)
+```
+
+`reuseIdentifier` is overridable for cases where you need a stable string across renames.
+
 ## Composition
 
 Token + extension layers compose so common UIKit setup chores collapse to a chain:
@@ -165,6 +218,7 @@ Token + extension layers compose so common UIKit setup chores collapse to a chai
 ```swift
 container.addSubviews(card)
 card
+    .setSize(width: 320, height: 88)
     .cornerRadius(.medium)
     .border(.hairline)
     .applyShadow(.subtle, withCornerRadius: .medium)
@@ -175,7 +229,8 @@ card
 
 - **SwiftUI** — token primitives are framework-agnostic but no `View`-style API is shipped here. A `HomerUIKitSwiftUI` companion may follow.
 - **Snapshot testing** — not bundled to keep the package dependency-free at runtime.
-- **`UIStackView` helpers** (`addArrangedSubviews(_:)`, etc.) — planned for v0.2.0.
+- **Auto-shadow update on bounds change** — planned for v0.3.0; today, call `updateShadowPathIfNeeded()` manually after a frame change.
+- **Dark-mode border auto-refresh** — planned for v0.3.0; today, re-apply `border(_:)` in `traitCollectionDidChange(_:)`.
 
 ## Development
 
