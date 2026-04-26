@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`UIView.isVisible` / `hide()` / `show()`** — positive-sense alias for `!isHidden` plus chainable mutators. Reads more naturally than `isHidden = !condition` at call sites.
+- **`UIView.animate(_:animations:completion:)`** — token-based wrapper around `UIView.animate(withDuration:animations:completion:)` that takes an ``AnimationDuration``. Both closures stay `@MainActor`-isolated under Swift 6 strict concurrency.
+- **`UILabel` convenience initializer** — bundles `text`, `font`, `textColor`, `textAlignment`, and `numberOfLines` into a single call. Omitted parameters keep UIKit defaults.
+- **`UIStackView` convenience initializers** — `(axis:spacing:alignment:distribution:arrangedSubviews:)` overloads taking either a ``Spacing`` token or a raw `CGFloat`. Default alignment/distribution are `.fill`.
+
+### Changed
+
+- **`UIColor(hex:)`** internals — switched whitespace handling to `HomerFoundation.String.whitespaceTrimmed` for consistency with the rest of the Homer suite, and lifted the bit masks / shifts / `255` divisor into a private `HexParser` namespace (no public API change).
+- **`UIView+Border` / `UIView+Shadow` DocC** — replaced stale "v0.1.0" / "v0.2.0" callouts with version-agnostic notes that point at the v0.4.0 milestone for trait-aware auto-refresh.
+- **HomerFoundation-first discipline pass** — audited every closure parameter, dictionary signature, and string helper across the package against HomerFoundation's `VoidCompletion` / `ValueCompletion<T>` / `Parameters` typealiases and `whitespaceTrimmed` / `nilIfEmpty` / `trimmedOrNil` extensions. `UIColor(hex:)` already uses `whitespaceTrimmed`; `UIView.animate(_:animations:completion:)` documents why its `@MainActor`-isolated closures stay inline (Swift does not allow `@MainActor` / `@escaping` to layer onto a typealiased function type). No further sites required conversion in this pass.
+
 ## [0.3.0] — 2026-04-26
 
 Naming cleanup and helper expansion. The `Tokens` namespace and `TokenColor` type are renamed to `Design` / `DesignColor` to better reflect the layer they form, and the short-lived `Reusable` protocol introduced in v0.2.0 is collapsed into an inline `T.description()` lookup. `AlertConfigurable` / `AlertShowable` and `UIApplication.topMostViewController` round out a long-standing alert-presentation gap harvested from FamilyAI.
