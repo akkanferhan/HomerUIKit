@@ -26,18 +26,24 @@ struct SpacingTests {
         #expect(Spacing.medium.cgFloat == Spacing.medium.value)
     }
 
-    @Test("custom passes through positive value unchanged")
-    func customPassthroughPositive() {
-        #expect(Spacing.custom(13) == 13)
+    @Test("custom carries positive value via .value")
+    func customPositive() {
+        #expect(Spacing.custom(13).value == 13)
     }
 
-    @Test("custom passes through negative value unchanged")
-    func customPassthroughNegative() {
-        #expect(Spacing.custom(-5) == -5)
+    @Test("custom carries negative value via .value")
+    func customNegative() {
+        #expect(Spacing.custom(-5).value == -5)
     }
 
-    @Test("allCases contains exactly 6 named cases")
-    func allCasesCount() {
-        #expect(Spacing.allCases.count == 6)
+    @Test("custom is Equatable on its associated value")
+    func customEquality() {
+        #expect(Spacing.custom(7) == Spacing.custom(7))
+        #expect(Spacing.custom(7) != Spacing.custom(8))
+    }
+
+    @Test("allCases contains exactly 6 preset cases and excludes custom")
+    func allCasesExcludesCustom() {
+        #expect(Spacing.allCases == [.xs, .small, .medium, .large, .xl, .xxl])
     }
 }
