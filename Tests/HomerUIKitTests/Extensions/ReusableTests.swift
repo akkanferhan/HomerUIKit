@@ -7,6 +7,7 @@ private final class FixtureCollectionCell: UICollectionViewCell {}
 private final class FixtureSupplementaryView: UICollectionReusableView {}
 
 @Suite("Reusable protocol")
+@MainActor
 struct ReusableProtocolTests {
 
     @Test("default reuseIdentifier matches the runtime type name")
