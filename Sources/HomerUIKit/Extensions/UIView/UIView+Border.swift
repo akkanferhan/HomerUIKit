@@ -5,11 +5,12 @@ public extension UIView {
 
     /// Applies a token-based border to the view's layer.
     ///
-    /// > Important: This is a one-shot operation in v0.1.0. The
-    /// > resolved `borderColor` does **not** automatically refresh
-    /// > on trait collection changes (e.g. light/dark mode). If you
-    /// > need that behaviour, re-apply the border in
-    /// > `traitCollectionDidChange(_:)`.
+    /// > Important: This is a one-shot operation. The resolved
+    /// > `borderColor` does **not** automatically refresh on trait
+    /// > collection changes (e.g. light/dark mode). If you need that
+    /// > behaviour, re-apply the border in
+    /// > `traitCollectionDidChange(_:)`. Auto-refresh is tracked
+    /// > under v0.4.0.
     ///
     /// - Parameter style: Border style to apply.
     /// - Returns: `self`, so calls can be chained.

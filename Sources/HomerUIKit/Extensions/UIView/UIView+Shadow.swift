@@ -32,8 +32,8 @@ public extension UIView {
     ///
     /// > Important: The path is generated once from the bounds at
     /// > call time. After any bounds change you must call
-    /// > ``updateShadowPathIfNeeded()`` to refresh the path. v0.2.0
-    /// > will lift this requirement.
+    /// > ``updateShadowPathIfNeeded()`` to refresh the path. A future
+    /// > release will lift this requirement (tracked under v0.4.0).
     ///
     /// - Parameters:
     ///   - style: Shadow style to apply.
