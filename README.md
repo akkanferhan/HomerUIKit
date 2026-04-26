@@ -1,11 +1,11 @@
 # HomerUIKit
 
-Modern Swift 6 / iOS 18 UIKit kit for the Homer suite of Apple apps. A consolidated layer of design tokens and `UIView` extensions that previously lived as copy-pasted snippets across projects — corner radius, shadow, border, Auto Layout pinning, and view-hierarchy helpers built on top of a `Sendable` token system.
+Modern Swift 6 / iOS 18 UIKit kit for the Homer suite of Apple apps. A consolidated layer of design system primitives, `UIView` extensions, and helper protocols that previously lived as copy-pasted snippets across projects — corner radius, shadow, border, Auto Layout pinning, view-hierarchy helpers, hex colours, dimension setters, typed cell dequeue, and alert presentation, built on top of a `Sendable` design system.
 
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+
 - **Tests:** Swift Testing
-- **Status:** `0.2.0` — public API documented with DocC, 130 tests, 0 warnings
+- **Status:** `0.3.0` — public API documented with DocC, 136 tests, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.2.0")
+    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.3.0")
 ]
 ```
 
@@ -32,9 +32,9 @@ In code:
 import HomerUIKit
 ```
 
-## Design tokens
+## Design system
 
-Pure-value, `Sendable` tokens that eliminate magic numbers and strings.
+Pure-value, `Sendable` design primitives (under `Sources/HomerUIKit/Design/`) that eliminate magic numbers and strings.
 
 ### `Spacing`
 
@@ -76,14 +76,14 @@ view.alpha = Alpha.p50.value               // 0.5
 let dim = UIColor.systemRed.withAlphaComponent(Alpha.p20.value)
 ```
 
-### `TokenColor`
+### `DesignColor`
 
 A `Sendable indirect enum` covering system colours, free-form RGBA, fixed black/white at opacity, dynamic light/dark pairing, and asset-catalog references.
 
 ```swift
-let label: TokenColor = .label
-let dim: TokenColor = .black(opacity: 0.5)
-let dynamic: TokenColor = .dynamic(
+let label: DesignColor = .label
+let dim: DesignColor = .black(opacity: 0.5)
+let dynamic: DesignColor = .dynamic(
     light: .systemBackground,
     dark: .black(opacity: 1)
 )
@@ -198,9 +198,9 @@ let glassy = UIColor(hex: "FF6F0080")      // RGBA — 50 % alpha
 let invalid = UIColor(hex: "not a color")  // nil
 ```
 
-## Reusable cells
+## Typed cell dequeue
 
-A lightweight `Reusable` protocol gives `UITableViewCell` and `UICollectionViewCell` (via `UICollectionReusableView`) a default reuse identifier — the runtime type name — so registration and dequeuing become type-safe one-liners.
+Generic `register(_:)` + `dequeueReusableCell(for:)` overloads on `UITableView` and `UICollectionView` use the cell type's runtime name (`T.description()`) as the reuse identifier — no protocol boilerplate, no string identifiers.
 
 ```swift
 final class ProductCell: UICollectionViewCell {}
@@ -209,7 +209,41 @@ collectionView.register(ProductCell.self)
 let cell: ProductCell = collectionView.dequeueReusableCell(for: indexPath)
 ```
 
-`reuseIdentifier` is overridable for cases where you need a stable string across renames.
+If a registered class has a custom `description()` (rare; only happens with explicit `+description` overrides), that name is used instead — handy when you want a stable identifier across renames.
+
+## Helpers
+
+### `UIApplication.topMostViewController`
+
+Walks the foreground-active scene's key window and unwraps `presentedViewController`, `UINavigationController`, and `UITabBarController` to reach the view controller the user is actually looking at. Returns `nil` when no foreground-active scene exists.
+
+```swift
+let visible = UIApplication.shared.topMostViewController
+```
+
+### Alerts — `AlertConfigurable` + `AlertShowable`
+
+Describe an alert as a value (title + message + style + actions) and present it from any context: a coordinator, a manager, or a `UIViewController` directly.
+
+```swift
+struct ConfirmDelete: AlertConfigurable {
+    let style: UIAlertController.Style = .alert
+    let title: String? = "Delete account?"
+    let message: String? = "This cannot be undone."
+    let actions: [UIAlertAction] = [
+        UIAlertAction(title: "Cancel", style: .cancel),
+        UIAlertAction(title: "Delete", style: .destructive) { _ in /* … */ }
+    ]
+}
+
+// From a coordinator / manager — presents on the top-most VC:
+final class AccountCoordinator: AlertShowable { /* … */ }
+coordinator.presentAlert(with: ConfirmDelete())
+
+// From a UIViewController — presents on self:
+final class SettingsVC: UIViewController, AlertShowable { /* … */ }
+settings.showAlert(with: ConfirmDelete())
+```
 
 ## Composition
 
@@ -227,10 +261,10 @@ card
 
 ## Out of scope
 
-- **SwiftUI** — token primitives are framework-agnostic but no `View`-style API is shipped here. A `HomerUIKitSwiftUI` companion may follow.
+- **SwiftUI** — design primitives are framework-agnostic but no `View`-style API is shipped here. A `HomerUIKitSwiftUI` companion may follow.
 - **Snapshot testing** — not bundled to keep the package dependency-free at runtime.
-- **Auto-shadow update on bounds change** — planned for v0.3.0; today, call `updateShadowPathIfNeeded()` manually after a frame change.
-- **Dark-mode border auto-refresh** — planned for v0.3.0; today, re-apply `border(_:)` in `traitCollectionDidChange(_:)`.
+- **Auto-shadow update on bounds change** — planned for v0.4.0; today, call `updateShadowPathIfNeeded()` manually after a frame change.
+- **Dark-mode border auto-refresh** — planned for v0.4.0; today, re-apply `border(_:)` in `traitCollectionDidChange(_:)`.
 
 ## Development
 
