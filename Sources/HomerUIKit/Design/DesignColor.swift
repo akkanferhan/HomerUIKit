@@ -1,18 +1,19 @@
 import UIKit
 
-/// A semantic colour token.
+/// A semantic colour from the design system.
 ///
-/// `TokenColor` is `Sendable` and pure-value; it does not touch UIKit
-/// until ``uiColor`` is read on the main actor. The enum supports
-/// system colours, fixed black/white at a chosen opacity, free-form
-/// RGBA, dynamic light/dark pairing, and asset-catalog lookups.
+/// `DesignColor` is `Sendable` and pure-value; it does not touch
+/// UIKit until ``uiColor`` is read on the main actor. The enum
+/// supports system colours, fixed black/white at a chosen opacity,
+/// free-form RGBA, dynamic light/dark pairing, and asset-catalog
+/// lookups.
 ///
 /// Hashing semantics:
 /// - ``asset(name:bundle:)`` hashes by the bundle's object identity
 ///   (`Bundle: Hashable` is provided by `NSObject`), not by its
 ///   contents. Two `Bundle?` references to the same bundle hash
 ///   equal.
-public indirect enum TokenColor: Sendable, Hashable {
+public indirect enum DesignColor: Sendable, Hashable {
 
     /// Maps to `UIColor.label`.
     case label
@@ -50,7 +51,7 @@ public indirect enum TokenColor: Sendable, Hashable {
     /// A colour that resolves differently in light vs. dark mode.
     /// Implemented under the hood via
     /// `UIColor(dynamicProvider:)`.
-    case dynamic(light: TokenColor, dark: TokenColor)
+    case dynamic(light: DesignColor, dark: DesignColor)
 
     /// A colour loaded from an asset catalog.
     ///
@@ -64,8 +65,9 @@ public indirect enum TokenColor: Sendable, Hashable {
     ///
     /// Must be read on the main actor: the resolver constructs
     /// `UIColor` instances that may bind to the trait collection
-    /// (`.dynamic`) or load from asset catalogs (`.asset`). Missing
-    /// asset lookups fall back to ``TokenColor/clear``.
+    /// (``dynamic(light:dark:)``) or load from asset catalogs
+    /// (``asset(name:bundle:)``). Missing asset lookups fall back to
+    /// ``clear``.
     @MainActor
     public var uiColor: UIColor {
         switch self {
@@ -89,8 +91,8 @@ public indirect enum TokenColor: Sendable, Hashable {
             )
         case .dynamic(let light, let dark):
             return UIColor { trait in
-                let token: TokenColor = (trait.userInterfaceStyle == .dark) ? dark : light
-                return MainActor.assumeIsolated { token.uiColor }
+                let resolved: DesignColor = (trait.userInterfaceStyle == .dark) ? dark : light
+                return MainActor.assumeIsolated { resolved.uiColor }
             }
         case .asset(let name, let bundle):
             return UIColor(named: name, in: bundle, compatibleWith: nil) ?? .clear

@@ -19,7 +19,7 @@ private final class CollectionSource: NSObject, UICollectionViewDataSource {
 
 @Suite("UICollectionView typed dequeue")
 @MainActor
-struct UICollectionViewReusableTests {
+struct UICollectionViewDequeueTests {
 
     @Test("register installs the cell under the type name as identifier")
     func registerInstallsCell() {

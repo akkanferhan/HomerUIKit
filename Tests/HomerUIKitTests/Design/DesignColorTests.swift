@@ -3,20 +3,20 @@ import UIKit
 @testable import HomerUIKit
 
 @MainActor
-@Suite("TokenColor token")
-struct TokenColorTests {
+@Suite("DesignColor token")
+struct DesignColorTests {
 
     // MARK: System colors
 
     @Test("label resolves to UIColor.label")
     func labelResolvesToSystemLabel() {
-        #expect(TokenColor.label.uiColor == UIColor.label)
+        #expect(DesignColor.label.uiColor == UIColor.label)
     }
 
     @Test("clear resolves to a fully transparent color")
     func clearIsFullyTransparent() {
         var alpha: CGFloat = 1
-        TokenColor.clear.uiColor.getRed(nil, green: nil, blue: nil, alpha: &alpha)
+        DesignColor.clear.uiColor.getRed(nil, green: nil, blue: nil, alpha: &alpha)
         #expect(alpha == 0)
     }
 
@@ -26,7 +26,7 @@ struct TokenColorTests {
     func blackOpacityComponents() {
         var white: CGFloat = 1
         var alpha: CGFloat = 0
-        TokenColor.black(opacity: 0.5).uiColor.getWhite(&white, alpha: &alpha)
+        DesignColor.black(opacity: 0.5).uiColor.getWhite(&white, alpha: &alpha)
         #expect(white == 0)
         #expect(alpha == 0.5)
     }
@@ -36,7 +36,7 @@ struct TokenColorTests {
     @Test("custom(1,0,0,1) resolves to red with full alpha")
     func customRGBARedFullAlpha() {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        TokenColor.custom(red: 1, green: 0, blue: 0, alpha: 1).uiColor
+        DesignColor.custom(red: 1, green: 0, blue: 0, alpha: 1).uiColor
             .getRed(&r, green: &g, blue: &b, alpha: &a)
         #expect(r == 1)
         #expect(g == 0)
@@ -47,7 +47,7 @@ struct TokenColorTests {
     @Test("custom clamps components above 1 and below 0")
     func customRGBAComponentsClamped() {
         var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        TokenColor.custom(red: 2, green: -1, blue: 0.5, alpha: 0.5).uiColor
+        DesignColor.custom(red: 2, green: -1, blue: 0.5, alpha: 0.5).uiColor
             .getRed(&r, green: &g, blue: &b, alpha: &a)
         #expect(r == 1)
         #expect(g == 0)
@@ -59,7 +59,7 @@ struct TokenColorTests {
 
     @Test("dynamic resolves to white in light trait collection")
     func dynamicResolvesToWhiteInLight() {
-        let color = TokenColor.dynamic(light: .white(opacity: 1), dark: .black(opacity: 1)).uiColor
+        let color = DesignColor.dynamic(light: .white(opacity: 1), dark: .black(opacity: 1)).uiColor
         let lightTrait = UITraitCollection(userInterfaceStyle: .light)
         let resolved = color.resolvedColor(with: lightTrait)
         var white: CGFloat = 0
@@ -71,7 +71,7 @@ struct TokenColorTests {
 
     @Test("dynamic resolves to black in dark trait collection")
     func dynamicResolvesToBlackInDark() {
-        let color = TokenColor.dynamic(light: .white(opacity: 1), dark: .black(opacity: 1)).uiColor
+        let color = DesignColor.dynamic(light: .white(opacity: 1), dark: .black(opacity: 1)).uiColor
         let darkTrait = UITraitCollection(userInterfaceStyle: .dark)
         let resolved = color.resolvedColor(with: darkTrait)
         var white: CGFloat = 1
@@ -85,27 +85,27 @@ struct TokenColorTests {
 
     @Test("label equals label")
     func labelEqualsLabel() {
-        #expect(TokenColor.label == TokenColor.label)
+        #expect(DesignColor.label == DesignColor.label)
     }
 
     @Test("label does not equal secondaryLabel")
     func labelNotEqualSecondaryLabel() {
-        #expect(TokenColor.label != TokenColor.secondaryLabel)
+        #expect(DesignColor.label != DesignColor.secondaryLabel)
     }
 
     @Test("custom with same RGBA components are equal")
     func customSameComponentsAreEqual() {
         #expect(
-            TokenColor.custom(red: 0, green: 0, blue: 0, alpha: 1) ==
-            TokenColor.custom(red: 0, green: 0, blue: 0, alpha: 1)
+            DesignColor.custom(red: 0, green: 0, blue: 0, alpha: 1) ==
+            DesignColor.custom(red: 0, green: 0, blue: 0, alpha: 1)
         )
     }
 
     @Test("custom with different alpha are not equal")
     func customDifferentAlphaNotEqual() {
         #expect(
-            TokenColor.custom(red: 0, green: 0, blue: 0, alpha: 1) !=
-            TokenColor.custom(red: 0, green: 0, blue: 0, alpha: 0.5)
+            DesignColor.custom(red: 0, green: 0, blue: 0, alpha: 1) !=
+            DesignColor.custom(red: 0, green: 0, blue: 0, alpha: 0.5)
         )
     }
 }
