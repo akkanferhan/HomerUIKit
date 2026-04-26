@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+
+      - name: Show versions
+        run: |
+          swift --version
+          xcodebuild -version
+
+      - name: Build
+        run: xcodebuild build -scheme HomerUIKit -destination 'generic/platform=iOS Simulator'
+
+      - name: Test
+        run: xcodebuild test -scheme HomerUIKit -destination 'platform=iOS Simulator,name=iPhone 16'
