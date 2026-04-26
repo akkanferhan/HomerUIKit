@@ -27,6 +27,23 @@ public enum Spacing: Sendable, Hashable, CaseIterable {
     /// 48 pt — hero-level vertical rhythm.
     case xxl
 
+    /// A caller-supplied point value carried through the token type.
+    ///
+    /// Use this when a one-off measurement does not deserve a new
+    /// preset case but you still need to pass a `Spacing` to a
+    /// token-accepting API: `view.pinToSuperview(spacing: .custom(6))`.
+    /// Negative values are carried through unchanged.
+    case custom(CGFloat)
+
+    /// The pre-baked named cases. The ``custom(_:)`` case is excluded
+    /// by definition — `CaseIterable` cannot enumerate a case with an
+    /// associated value, so this list is hand-written and contains
+    /// only ``xs``, ``small``, ``medium``, ``large``, ``xl``, and
+    /// ``xxl``.
+    public static var allCases: [Spacing] {
+        [.xs, .small, .medium, .large, .xl, .xxl]
+    }
+
     /// The point value backing the token.
     public var value: CGFloat {
         switch self {
@@ -36,23 +53,11 @@ public enum Spacing: Sendable, Hashable, CaseIterable {
         case .large: return 24
         case .xl: return 32
         case .xxl: return 48
+        case .custom(let value): return value
         }
     }
 
     /// Alias for ``value`` for sites that read more naturally as
     /// `someToken.cgFloat`.
     public var cgFloat: CGFloat { value }
-
-    /// Escape hatch returning a raw point value without wrapping it
-    /// in a token. Use this when a one-off measurement does not
-    /// deserve a new token.
-    ///
-    /// The static-method shape makes the intent explicit at the call
-    /// site: `Spacing.custom(13)` reads as "I know this is not a
-    /// token".
-    ///
-    /// - Parameter value: A point value. Negative values are passed
-    ///   through unchanged; the caller is responsible for sign.
-    /// - Returns: The same value, untouched.
-    public static func custom(_ value: CGFloat) -> CGFloat { value }
 }
