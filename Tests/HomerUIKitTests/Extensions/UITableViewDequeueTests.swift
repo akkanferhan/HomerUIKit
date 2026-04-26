@@ -19,13 +19,13 @@ private final class TableSource: NSObject, UITableViewDataSource {
 
 @Suite("UITableView typed dequeue")
 @MainActor
-struct UITableViewReusableTests {
+struct UITableViewDequeueTests {
 
     @Test("register installs the cell under the type name as identifier")
     func registerInstallsCell() {
         let table = UITableView(frame: CGRect(x: 0, y: 0, width: 200, height: 200))
         table.register(TypedTableCell.self)
-        let cell = table.dequeueReusableCell(withIdentifier: TypedTableCell.reuseIdentifier)
+        let cell = table.dequeueReusableCell(withIdentifier: TypedTableCell.description())
         #expect(cell is TypedTableCell)
     }
 

@@ -3,21 +3,20 @@ import UIKit
 @MainActor
 public extension UITableView {
 
-    /// Registers a `UITableViewCell` subclass using its
-    /// ``Reusable/reuseIdentifier`` (defaults to the type name).
+    /// Registers a `UITableViewCell` subclass using its runtime
+    /// type name (`T.description()`) as the reuse identifier.
     ///
     /// - Parameter cellClass: The cell class to register.
     func register<T: UITableViewCell>(_ cellClass: T.Type) {
-        register(cellClass, forCellReuseIdentifier: T.reuseIdentifier)
+        register(cellClass, forCellReuseIdentifier: T.description())
     }
 
     /// Dequeues a strongly-typed cell at the given index path.
     ///
-    /// The cell is looked up by ``Reusable/reuseIdentifier``. If
-    /// dequeuing fails (typically because ``register(_:)`` was not
-    /// called for `T`), this method traps with a clear diagnostic —
-    /// it's a programmer error, not a runtime condition to recover
-    /// from.
+    /// The cell is looked up by its runtime type name. If dequeuing
+    /// fails (typically because ``register(_:)`` was not called for
+    /// `T`), this method traps with a clear diagnostic — it's a
+    /// programmer error, not a runtime condition to recover from.
     ///
     /// ```swift
     /// let cell: ProductCell = tableView.dequeueReusableCell(for: indexPath)
@@ -29,7 +28,7 @@ public extension UITableView {
     func dequeueReusableCell<T: UITableViewCell>(for indexPath: IndexPath) -> T {
         guard
             let cell = dequeueReusableCell(
-                withIdentifier: T.reuseIdentifier,
+                withIdentifier: T.description(),
                 for: indexPath
             ) as? T
         else {
