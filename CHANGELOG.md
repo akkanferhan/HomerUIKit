@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-04-27
+
+### Added
+
+- **`UIView.anchor(top:leading:bottom:trailing:padding:size:)`** — flexible per-edge constraint helper for layouts that mix anchors from different ancestors (e.g. a sibling's `bottomAnchor` with the parent's `safeAreaLayoutGuide.topAnchor`). Edges left as `nil` are skipped, `padding` insets are negated automatically for bottom/trailing so positive values move the edge inwards, and a non-zero `size` adds width / height constants in the same call. Returns the activated constraints in declaration order so callers can mutate constants later for animations.
+- **`UIView.centerInSuperview(size:)`** — overload of the existing zero-arg ``centerInSuperview()`` that combines centering with fixed dimensions. Components ≤ 0 are skipped, so partial sizing (only width or only height) is supported. Returns `self` for chaining.
+- **`UIView.centerX(inView:topAnchor:paddingTop:)` / `UIView.centerY(inView:leadingAnchor:paddingLeading:)`** — single-axis centring helpers with an optional secondary-axis anchor. Useful for siblings that should align on one axis but float on the other (icon centred vertically beside a label, title centred horizontally below a header). Both return `self` for chaining.
+- **`UIView.setAspectRatio(_:)`** — width-to-height ratio constraint. Pass `1.0` for a square, `16.0 / 9.0` for landscape video, etc. Returns the activated constraint so callers can mutate priority or replace it later for animated ratio changes.
+- **`UIView.setWidth(equalTo:)`** — pins the receiver's width to another view's width via `widthAnchor.constraint(equalTo:)`. Useful for sibling views that must stay the same width across rotations and dynamic-type changes. Returns `self` for chaining.
+- **`NSLayoutConstraint.withPriority(_:)`** — fluent priority assignment so chained constraint declarations can drop their priority before activation. Pairs with the new `UIView.setAspectRatio(_:)` and `UIView.anchor(...)` helpers when a layout needs "preferred but compressible" rules.
+
 ## [0.4.0] — 2026-04-27
 
 ### Added
@@ -116,7 +127,8 @@ Initial release. UIKit extensions and design tokens for the Homer suite, built o
 - `border(_:)` does not auto-refresh `borderColor` on trait-collection changes (light/dark mode); re-apply in `traitCollectionDidChange(_:)` if you need it.
 - No `UIStackView.addArrangedSubviews(_:)` helper yet.
 
-[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/akkanferhan/HomerUIKit/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/akkanferhan/HomerUIKit/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.3.0
 [0.2.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.2.0
