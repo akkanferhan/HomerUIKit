@@ -1,3 +1,4 @@
+import HomerFoundation
 import UIKit
 
 public extension UIColor {
@@ -20,33 +21,62 @@ public extension UIColor {
     ///
     /// - Parameter hex: The hex string to parse.
     convenience init?(hex: String) {
-        let trimmed = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = hex.whitespaceTrimmed
         let stripped: String
-        if trimmed.hasPrefix("#") {
+        if trimmed.hasPrefix(HexParser.hashPrefix) {
             stripped = String(trimmed.dropFirst())
         } else {
             stripped = trimmed
         }
 
-        guard stripped.count == 6 || stripped.count == 8 else { return nil }
+        guard
+            stripped.count == HexParser.rgbLength || stripped.count == HexParser.rgbaLength
+        else {
+            return nil
+        }
         guard stripped.allSatisfy({ $0.isHexDigit }) else { return nil }
 
         var value: UInt64 = 0
         Scanner(string: stripped).scanHexInt64(&value)
 
         let red, green, blue, alpha: CGFloat
-        if stripped.count == 8 {
-            red = CGFloat((value & 0xFF00_0000) >> 24) / 255
-            green = CGFloat((value & 0x00FF_0000) >> 16) / 255
-            blue = CGFloat((value & 0x0000_FF00) >> 8) / 255
-            alpha = CGFloat(value & 0x0000_00FF) / 255
+        if stripped.count == HexParser.rgbaLength {
+            red = CGFloat((value & HexParser.rgbaRedMask) >> HexParser.rgbaRedShift) / HexParser.componentMax
+            green = CGFloat((value & HexParser.rgbaGreenMask) >> HexParser.rgbaGreenShift) / HexParser.componentMax
+            blue = CGFloat((value & HexParser.rgbaBlueMask) >> HexParser.rgbaBlueShift) / HexParser.componentMax
+            alpha = CGFloat(value & HexParser.rgbaAlphaMask) / HexParser.componentMax
         } else {
-            red = CGFloat((value & 0xFF_0000) >> 16) / 255
-            green = CGFloat((value & 0x00_FF00) >> 8) / 255
-            blue = CGFloat(value & 0x00_00FF) / 255
+            red = CGFloat((value & HexParser.rgbRedMask) >> HexParser.rgbRedShift) / HexParser.componentMax
+            green = CGFloat((value & HexParser.rgbGreenMask) >> HexParser.rgbGreenShift) / HexParser.componentMax
+            blue = CGFloat(value & HexParser.rgbBlueMask) / HexParser.componentMax
             alpha = 1
         }
 
         self.init(red: red, green: green, blue: blue, alpha: alpha)
     }
+}
+
+// MARK: - Internal constants
+
+private enum HexParser {
+    static let hashPrefix = "#"
+    static let rgbLength = 6
+    static let rgbaLength = 8
+    static let componentMax: CGFloat = 255
+
+    // RGBA (8-char) bit masks and shifts.
+    static let rgbaRedMask: UInt64 = 0xFF00_0000
+    static let rgbaRedShift: UInt64 = 24
+    static let rgbaGreenMask: UInt64 = 0x00FF_0000
+    static let rgbaGreenShift: UInt64 = 16
+    static let rgbaBlueMask: UInt64 = 0x0000_FF00
+    static let rgbaBlueShift: UInt64 = 8
+    static let rgbaAlphaMask: UInt64 = 0x0000_00FF
+
+    // RGB (6-char) bit masks and shifts.
+    static let rgbRedMask: UInt64 = 0xFF_0000
+    static let rgbRedShift: UInt64 = 16
+    static let rgbGreenMask: UInt64 = 0x00_FF00
+    static let rgbGreenShift: UInt64 = 8
+    static let rgbBlueMask: UInt64 = 0x00_00FF
 }

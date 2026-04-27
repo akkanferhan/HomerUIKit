@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-04-27
+
+### Added
+
+- **`AlertManager` / `AlertManagerProtocol`** — `@MainActor` reference type that serialises ``AlertConfigurable`` presentations through a dedicated `UIWindow` at ``UIWindow.Level.alert`` `+ 1`. Concurrent `enqueue(_:)` calls from any number of call sites are queued FIFO; each alert waits for the previous one's `viewDidDisappear` before being shown, eliminating the "second `present` is silently dropped" UIKit pitfall. `removeAll()` clears any pending alerts and dismisses the alert currently on screen, returning the manager to idle. The dedicated window decouples alert lifetime from the underlying scene's view-controller stack so pop / push / full-screen modal transitions in the app no longer race with alert presentation. Depend on the `AlertManagerProtocol` surface from consumers to enable mock-based unit testing.
+- **`LoadingManager` / `LoadingManagerProtocol`** — `@MainActor` reference-counted controller that drives a global loading indicator hosted in a private `UIWindow` at ``UIWindow.Level.alert`` `- 1` (one notch below alerts so they layer on top). `show()` / `hide()` are reference-counted so independent call sites can coexist without flicker; `forceHide()` resets the counter and dismisses the indicator immediately for sign-out / global-error flows. Replaces the old `Loading` / `LoadingProtocol` pair: drops the `DispatchQueue` GCD plumbing in favour of `@MainActor` isolation, drops the configure-or-fatalError requirement (sensible defaults apply when ``configure(with:)`` is never called), and fixes a silent bug where the indicator's card was never added to the host's view hierarchy.
+- **`LoadingConfigurable`** — promoted from internal to `@MainActor public protocol`. Conform a value type to set ``loadingIndicatorHasBackground`` and pass it to ``LoadingManagerProtocol/configure(with:)``.
+- **`UIApplication.activeForegroundWindowScene`** — `@MainActor public` extension property that returns the first connected `UIWindowScene` whose activation state is `.foregroundActive`, or `nil` otherwise. Use when constructing overlay `UIWindow`s (alert / loading / debug HUD). Internally consumed by ``AlertManager``, ``LoadingManager``, and ``UIApplication/topMostViewController``.
+- **`UIView.isVisible` / `hide()` / `show()`** — positive-sense alias for `!isHidden` plus chainable mutators. Reads more naturally than `isHidden = !condition` at call sites.
+- **`UIView.animate(_:animations:completion:)`** — token-based wrapper around `UIView.animate(withDuration:animations:completion:)` that takes an ``AnimationDuration``. Both closures stay `@MainActor`-isolated under Swift 6 strict concurrency.
+- **`UILabel` convenience initializer** — bundles `text`, `font`, `textColor`, `textAlignment`, and `numberOfLines` into a single call. Omitted parameters keep UIKit defaults.
+- **`UIStackView` convenience initializers** — `(axis:spacing:alignment:distribution:arrangedSubviews:)` overloads taking either a ``Spacing`` token or a raw `CGFloat`. Default alignment/distribution are `.fill`.
+
+### Changed
+
+- **`UIApplication/topMostViewController`** — refactored to consume the new ``UIApplication/activeForegroundWindowScene`` instead of inlining the scene lookup, removing duplication.
+- **`UIColor(hex:)`** internals — switched whitespace handling to `HomerFoundation.String.whitespaceTrimmed` for consistency with the rest of the Homer suite, and lifted the bit masks / shifts / `255` divisor into a private `HexParser` namespace (no public API change).
+- **`UIView+Border` / `UIView+Shadow` DocC** — replaced stale "v0.1.0" / "v0.2.0" callouts with version-agnostic notes that point at the v0.4.0 milestone for trait-aware auto-refresh.
+- **HomerFoundation-first discipline pass** — audited every closure parameter, dictionary signature, and string helper across the package against HomerFoundation's `VoidCompletion` / `ValueCompletion<T>` / `Parameters` typealiases and `whitespaceTrimmed` / `nilIfEmpty` / `trimmedOrNil` extensions. `UIColor(hex:)` already uses `whitespaceTrimmed`; `UIView.animate(_:animations:completion:)` documents why its `@MainActor`-isolated closures stay inline (Swift does not allow `@MainActor` / `@escaping` to layer onto a typealiased function type). No further sites required conversion in this pass.
+
+### Removed
+
+- **`AlertShowable`** — the protocol with default ``presentAlert(with:)`` and `where Self: UIViewController` ``showAlert(with:)`` is gone. Surface alerts by depending on ``AlertManagerProtocol`` (injected from your composition root) and calling ``AlertManagerProtocol/enqueue(_:)`` directly. The queueing + dedicated-window guarantees ``AlertShowable`` was added in v0.3.0 to provide are now part of ``AlertManager`` itself.
+- **`LoadingProtocol`** — renamed to ``LoadingManagerProtocol`` for symmetry with ``AlertManagerProtocol`` and to free the `LoadingProtocol` name. Update conformances and `any LoadingProtocol` references accordingly.
+
 ## [0.3.0] — 2026-04-26
 
 Naming cleanup and helper expansion. The `Tokens` namespace and `TokenColor` type are renamed to `Design` / `DesignColor` to better reflect the layer they form, and the short-lived `Reusable` protocol introduced in v0.2.0 is collapsed into an inline `T.description()` lookup. `AlertConfigurable` / `AlertShowable` and `UIApplication.topMostViewController` round out a long-standing alert-presentation gap harvested from FamilyAI.
@@ -91,7 +116,8 @@ Initial release. UIKit extensions and design tokens for the Homer suite, built o
 - `border(_:)` does not auto-refresh `borderColor` on trait-collection changes (light/dark mode); re-apply in `traitCollectionDidChange(_:)` if you need it.
 - No `UIStackView.addArrangedSubviews(_:)` helper yet.
 
-[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/akkanferhan/HomerUIKit/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.3.0
 [0.2.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.2.0
 [0.1.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.1.0

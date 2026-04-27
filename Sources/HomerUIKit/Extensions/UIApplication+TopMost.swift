@@ -14,9 +14,7 @@ public extension UIApplication {
     /// during launch or in a unit-test target without a window).
     var topMostViewController: UIViewController? {
         guard
-            let scene = connectedScenes
-                .compactMap({ $0 as? UIWindowScene })
-                .first(where: { $0.activationState == .foregroundActive }),
+            let scene = activeForegroundWindowScene,
             let root = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController
         else {
             return nil
