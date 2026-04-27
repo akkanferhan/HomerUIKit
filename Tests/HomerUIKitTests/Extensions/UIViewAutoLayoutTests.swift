@@ -121,4 +121,137 @@ struct UIViewAutoLayoutTests {
         _ = container
         #expect(returned === child)
     }
+
+    // MARK: anchor(...)
+
+    @Test("anchor activates one constraint per supplied edge")
+    func anchorActivatesPerEdge() {
+        let (child, container) = ViewFixture.parented()
+        let constraints = child.anchor(
+            top: container.topAnchor,
+            leading: container.leadingAnchor,
+            bottom: container.bottomAnchor,
+            trailing: container.trailingAnchor
+        )
+        #expect(constraints.count == 4)
+        #expect(constraints.allSatisfy { $0.isActive })
+    }
+
+    @Test("anchor skips edges left as nil")
+    func anchorSkipsNilEdges() {
+        let (child, container) = ViewFixture.parented()
+        let constraints = child.anchor(
+            top: container.topAnchor,
+            leading: container.leadingAnchor
+        )
+        #expect(constraints.count == 2)
+    }
+
+    @Test("anchor negates bottom and trailing padding so positive values move inwards")
+    func anchorNegatesBottomTrailingPadding() throws {
+        let (child, container) = ViewFixture.parented()
+        let constraints = child.anchor(
+            top: container.topAnchor,
+            leading: container.leadingAnchor,
+            bottom: container.bottomAnchor,
+            trailing: container.trailingAnchor,
+            padding: UIEdgeInsets(top: 4, left: 8, bottom: 12, right: 16)
+        )
+        #expect(constraints[0].constant == 4)    // top
+        #expect(constraints[1].constant == 8)    // leading
+        #expect(constraints[2].constant == -12)  // bottom (negated)
+        #expect(constraints[3].constant == -16)  // trailing (negated)
+    }
+
+    @Test("anchor adds width and height constants when size is non-zero")
+    func anchorIncludesSizeConstraints() {
+        let (child, container) = ViewFixture.parented()
+        let constraints = child.anchor(
+            top: container.topAnchor,
+            size: CGSize(width: 100, height: 50)
+        )
+        #expect(constraints.count == 3)  // top + width + height
+        let widthConstant = constraints.first { $0.firstAttribute == .width }?.constant
+        let heightConstant = constraints.first { $0.firstAttribute == .height }?.constant
+        #expect(widthConstant == 100)
+        #expect(heightConstant == 50)
+    }
+
+    @Test("anchor disables autoresizing translation")
+    func anchorDisablesTAMIC() {
+        let (child, container) = ViewFixture.parented()
+        child.translatesAutoresizingMaskIntoConstraints = true
+        _ = child.anchor(top: container.topAnchor)
+        #expect(child.translatesAutoresizingMaskIntoConstraints == false)
+    }
+
+    // MARK: centerInSuperview(size:)
+
+    @Test("centerInSuperview(size:) installs centre + width + height constraints")
+    func centerInSuperviewWithSize() {
+        let (child, container) = ViewFixture.parented()
+        child.centerInSuperview(size: CGSize(width: 80, height: 40))
+        // Centre constraints land on the container; width/height land on the child itself.
+        let centreCount = container.constraints.filter {
+            $0.firstAttribute == .centerX || $0.firstAttribute == .centerY
+        }.count
+        let widthCount = child.constraints.filter { $0.firstAttribute == .width }.count
+        let heightCount = child.constraints.filter { $0.firstAttribute == .height }.count
+        #expect(centreCount == 2)
+        #expect(widthCount == 1)
+        #expect(heightCount == 1)
+    }
+
+    @Test("centerInSuperview(size:) skips zero or negative components")
+    func centerInSuperviewSkipsZeroSize() {
+        let (child, container) = ViewFixture.parented()
+        child.centerInSuperview(size: .zero)
+        _ = container
+        let widthCount = child.constraints.filter { $0.firstAttribute == .width }.count
+        let heightCount = child.constraints.filter { $0.firstAttribute == .height }.count
+        #expect(widthCount == 0)
+        #expect(heightCount == 0)
+    }
+
+    // MARK: centerX / centerY
+
+    @Test("centerX(inView:) installs a centerX constraint and returns self")
+    func centerXInstallsConstraint() {
+        let (child, container) = ViewFixture.parented()
+        let returned = child.centerX(inView: container)
+        let centreX = container.constraints.first { $0.firstAttribute == .centerX }
+        #expect(centreX != nil)
+        #expect(centreX?.isActive == true)
+        #expect(returned === child)
+    }
+
+    @Test("centerX(inView:topAnchor:paddingTop:) pins the top with the supplied padding")
+    func centerXWithTopAnchor() throws {
+        let (child, container) = ViewFixture.parented()
+        child.centerX(inView: container, topAnchor: container.topAnchor, paddingTop: 24)
+        let topConstraint = try #require(container.constraints.first {
+            $0.firstAttribute == .top && $0.firstItem === child
+        })
+        #expect(topConstraint.constant == 24)
+    }
+
+    @Test("centerY(inView:) installs a centerY constraint and returns self")
+    func centerYInstallsConstraint() {
+        let (child, container) = ViewFixture.parented()
+        let returned = child.centerY(inView: container)
+        let centreY = container.constraints.first { $0.firstAttribute == .centerY }
+        #expect(centreY != nil)
+        #expect(centreY?.isActive == true)
+        #expect(returned === child)
+    }
+
+    @Test("centerY(inView:leadingAnchor:paddingLeading:) pins leading with the supplied padding")
+    func centerYWithLeadingAnchor() throws {
+        let (child, container) = ViewFixture.parented()
+        child.centerY(inView: container, leadingAnchor: container.leadingAnchor, paddingLeading: 12)
+        let leadingConstraint = try #require(container.constraints.first {
+            $0.firstAttribute == .leading && $0.firstItem === child
+        })
+        #expect(leadingConstraint.constant == 12)
+    }
 }
