@@ -1,3 +1,4 @@
+import HomerFoundation
 import UIKit
 
 /// Serialises ``AlertConfigurable`` presentations through a dedicated
@@ -28,55 +29,33 @@ import UIKit
 /// calls run on the main actor's serial executor, so concurrent
 /// callers from any number of background contexts can enqueue safely
 /// — they hop to the main actor before touching shared state.
-///
-/// ```swift
-/// // From any actor:
-/// Task { @MainActor in
-///     AlertManager.shared.enqueue(MyAlertConfig())
-/// }
 /// ```
 @MainActor
-public final class AlertManager {
-
-    /// Shared singleton. Use this from app code; reserve dedicated
-    /// instances for tests.
-    public static let shared = AlertManager()
+public final class AlertManager: AlertManagerProtocol {
 
     private var queue: [any AlertConfigurable] = []
     private var isPresenting = false
     private var alertWindow: UIWindow?
 
-    /// Test seam: when set, this closure is called instead of
-    /// presenting the alert in the dedicated window. The closure
-    /// receives the configured alert controller and a dismissal
-    /// completion that the test invokes to simulate the user
-    /// dismissing the alert.
-    var presentationOverride: ((UIAlertController, @escaping @MainActor () -> Void) -> Void)?
-
-    /// Creates a new manager. Prefer ``shared`` from app code.
     public init() {}
 
-    /// Adds a configuration to the FIFO queue. If no alert is
-    /// presenting, the new alert is shown immediately; otherwise it
-    /// waits its turn behind any earlier enqueues.
-    ///
-    /// - Parameter configuration: The alert description to present.
     public func enqueue(_ configuration: any AlertConfigurable) {
         queue.append(configuration)
         presentNextIfNeeded()
     }
 
-    /// Number of queued alerts not yet shown. Exposed for tests and
-    /// diagnostics.
-    var pendingCount: Int { queue.count }
+    public func removeAll() {
+        queue.removeAll()
+        alertWindow?.rootViewController?.presentedViewController?.dismiss(animated: true)
+    }
+}
 
-    /// Whether an alert is currently on screen. Exposed for tests.
-    var isShowingAlert: Bool { isPresenting }
+private extension AlertManager {
 
-    private func presentNextIfNeeded() {
+    func presentNextIfNeeded() {
         guard !isPresenting else { return }
         guard !queue.isEmpty else {
-            tearDownWindowIfNeeded()
+            tearDownWindow()
             return
         }
         let next = queue.removeFirst()
@@ -84,7 +63,17 @@ public final class AlertManager {
         present(next)
     }
 
-    private func present(_ configuration: any AlertConfigurable) {
+    func present(_ configuration: any AlertConfigurable) {
+        guard let scene = UIApplication.shared.activeForegroundWindowScene else {
+            isPresenting = false
+            return
+        }
+        let window = obtainWindow(in: scene)
+        guard let host = window.rootViewController else {
+            isPresenting = false
+            return
+        }
+
         let alert = TrackedAlertController(
             title: configuration.title,
             message: configuration.message,
@@ -96,33 +85,16 @@ public final class AlertManager {
         alert.onDismiss = { [weak self] in
             self?.handleDismissal()
         }
-
-        if let presentationOverride {
-            presentationOverride(alert) { [weak self] in
-                self?.handleDismissal()
-            }
-            return
-        }
-
-        guard let scene = activeForegroundWindowScene() else {
-            isPresenting = false
-            return
-        }
-        let window = obtainWindow(in: scene)
-        guard let host = window.rootViewController else {
-            isPresenting = false
-            return
-        }
         configurePopover(alert: alert, host: host)
         host.present(alert, animated: true)
     }
 
-    private func handleDismissal() {
+    func handleDismissal() {
         isPresenting = false
         presentNextIfNeeded()
     }
 
-    private func obtainWindow(in scene: UIWindowScene) -> UIWindow {
+    func obtainWindow(in scene: UIWindowScene) -> UIWindow {
         if let existing = alertWindow, existing.windowScene === scene {
             return existing
         }
@@ -135,26 +107,20 @@ public final class AlertManager {
         return window
     }
 
-    private func tearDownWindowIfNeeded() {
+    func tearDownWindow() {
         alertWindow?.isHidden = true
         alertWindow = nil
     }
 
-    private func activeForegroundWindowScene() -> UIWindowScene? {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first { $0.activationState == .foregroundActive }
-    }
-
-    private func configurePopover(alert: UIAlertController, host: UIViewController) {
+    func configurePopover(alert: UIAlertController, host: UIViewController) {
         guard let popover = alert.popoverPresentationController else { return }
         let view = host.view!
         popover.sourceView = view
         popover.sourceRect = CGRect(
             x: view.bounds.midX,
             y: view.bounds.midY,
-            width: 0,
-            height: 0
+            width: .zero,
+            height: .zero
         )
         popover.permittedArrowDirections = []
     }
@@ -163,7 +129,7 @@ public final class AlertManager {
 @MainActor
 private final class TrackedAlertController: UIAlertController {
 
-    var onDismiss: (() -> Void)?
+    var onDismiss: VoidCompletion?
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
@@ -175,10 +141,6 @@ private final class TrackedAlertController: UIAlertController {
 
 @MainActor
 private final class AlertHostViewController: UIViewController {
-
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        .all
-    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
