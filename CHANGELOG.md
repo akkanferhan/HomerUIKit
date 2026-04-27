@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- **`AlertManager`** — `@MainActor` singleton that serialises ``AlertConfigurable`` presentations through a dedicated `UIWindow` at ``UIWindow.Level.alert`` `+ 1`. Concurrent `enqueue(_:)` calls from any number of call sites are queued FIFO; each alert waits for the previous one's `viewDidDisappear` before being shown, eliminating the "second `present` is silently dropped" UIKit pitfall that plagued ad-hoc ``AlertShowable`` usage. The dedicated window decouples alert lifetime from the underlying scene's view-controller stack — pop / push / full-screen modal transitions in the app no longer race with alert presentation. Thread safety is provided by `@MainActor` isolation; callers from background actors hop via `Task { @MainActor in … }`.
 - **`UIView.isVisible` / `hide()` / `show()`** — positive-sense alias for `!isHidden` plus chainable mutators. Reads more naturally than `isHidden = !condition` at call sites.
 - **`UIView.animate(_:animations:completion:)`** — token-based wrapper around `UIView.animate(withDuration:animations:completion:)` that takes an ``AnimationDuration``. Both closures stay `@MainActor`-isolated under Swift 6 strict concurrency.
 - **`UILabel` convenience initializer** — bundles `text`, `font`, `textColor`, `textAlignment`, and `numberOfLines` into a single call. Omitted parameters keep UIKit defaults.
@@ -15,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **`AlertShowable.presentAlert(with:)`** default implementation now forwards to ``AlertManager/shared`` instead of locating the application's top-most view controller and presenting on it. Existing call sites automatically gain queueing and own-window presentation; the `where Self: UIViewController` ``showAlert(with:)`` overload is unchanged for callers that explicitly want self-hosted (non-queued) presentation.
 - **`UIColor(hex:)`** internals — switched whitespace handling to `HomerFoundation.String.whitespaceTrimmed` for consistency with the rest of the Homer suite, and lifted the bit masks / shifts / `255` divisor into a private `HexParser` namespace (no public API change).
 - **`UIView+Border` / `UIView+Shadow` DocC** — replaced stale "v0.1.0" / "v0.2.0" callouts with version-agnostic notes that point at the v0.4.0 milestone for trait-aware auto-refresh.
 - **HomerFoundation-first discipline pass** — audited every closure parameter, dictionary signature, and string helper across the package against HomerFoundation's `VoidCompletion` / `ValueCompletion<T>` / `Parameters` typealiases and `whitespaceTrimmed` / `nilIfEmpty` / `trimmedOrNil` extensions. `UIColor(hex:)` already uses `whitespaceTrimmed`; `UIView.animate(_:animations:completion:)` documents why its `@MainActor`-isolated closures stay inline (Swift does not allow `@MainActor` / `@escaping` to layer onto a typealiased function type). No further sites required conversion in this pass.

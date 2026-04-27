@@ -5,20 +5,24 @@ import UIKit
 ///
 /// Adopt `AlertShowable` on coordinators, managers, or any
 /// non-`UIViewController` type that needs to surface an alert. The
-/// default implementation looks up the application's top-most view
-/// controller via
-/// ``UIKit/UIApplication/topMostViewController`` and presents on it;
-/// if no foreground-active scene is available, the call is a no-op.
+/// default ``presentAlert(with:)`` implementation forwards to
+/// ``AlertManager/shared``, which queues concurrent requests and
+/// shows them serially in a dedicated window above the application's
+/// content — so multiple call sites firing at once no longer drop
+/// alerts on the floor.
 ///
 /// `UIViewController` types that adopt `AlertShowable` get a second
-/// method, ``showAlert(with:)``, which presents on `self` instead of
-/// hopping to the top-most view controller — useful when you control
-/// the presenter and want to keep the alert attached to your screen.
+/// method, ``showAlert(with:)``, which presents on `self` directly
+/// (bypassing the manager's queue and window). Use it only when you
+/// own the presenter's lifecycle and explicitly want the alert
+/// scoped to that view-controller's hierarchy.
 @MainActor
 public protocol AlertShowable {
 
-    /// Presents an alert on the application's top-most view
-    /// controller. No-op if no key window is available.
+    /// Enqueues an alert on ``AlertManager/shared``. The manager
+    /// presents the alert in its own window above any current
+    /// content, and serialises concurrent requests so no two alerts
+    /// race for the same presenter.
     ///
     /// - Parameter configuration: The alert configuration.
     func presentAlert(with configuration: any AlertConfigurable)
@@ -27,18 +31,20 @@ public protocol AlertShowable {
 public extension AlertShowable {
 
     func presentAlert(with configuration: any AlertConfigurable) {
-        guard let host = UIApplication.shared.topMostViewController else { return }
-        presentAlertController(for: configuration, on: host)
+        AlertManager.shared.enqueue(configuration)
     }
 }
 
 public extension AlertShowable where Self: UIViewController {
 
-    /// Presents the alert on the receiver itself rather than the
-    /// top-most view controller.
+    /// Presents the alert on the receiver itself, bypassing
+    /// ``AlertManager``'s queue and dedicated window.
     ///
     /// Use this when you already have a presenter in hand and want
-    /// the alert to remain a child of `self`'s presentation hierarchy.
+    /// the alert to remain a child of `self`'s presentation
+    /// hierarchy. Note that calls made while another presentation is
+    /// active on `self` are silently dropped by UIKit — for that
+    /// reason ``presentAlert(with:)`` is preferred.
     ///
     /// - Parameter configuration: The alert configuration.
     func showAlert(with configuration: any AlertConfigurable) {
