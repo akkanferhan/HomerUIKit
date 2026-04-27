@@ -64,4 +64,49 @@ struct UIViewDimensionsTests {
             .setMinimumHeight(8)
         #expect(result === view)
     }
+
+    // MARK: setWidth(equalTo:)
+
+    @Test("setWidth(equalTo:) installs an equal-width constraint between two views")
+    func setWidthEqualToInstallsConstraint() throws {
+        let (child, container) = ViewFixture.parented()
+        let sibling = UIView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+        container.addSubview(sibling)
+        child.setWidth(equalTo: sibling)
+        let constraint = try #require(container.constraints.first {
+            $0.firstAttribute == .width && $0.relation == .equal && $0.secondAttribute == .width
+        })
+        #expect(constraint.isActive)
+        #expect(constraint.firstItem === child)
+        #expect(constraint.secondItem === sibling)
+    }
+
+    @Test("setWidth(equalTo:) returns self for chaining")
+    func setWidthEqualToIsChainable() {
+        let (child, container) = ViewFixture.parented()
+        let sibling = UIView()
+        container.addSubview(sibling)
+        let returned = child.setWidth(equalTo: sibling)
+        #expect(returned === child)
+    }
+
+    // MARK: setAspectRatio
+
+    @Test("setAspectRatio installs a width-to-height multiplier constraint")
+    func setAspectRatioInstallsConstraint() {
+        let view = ViewFixture.standalone()
+        let constraint = view.setAspectRatio(2.0)
+        #expect(constraint.isActive)
+        #expect(constraint.firstAttribute == .width)
+        #expect(constraint.secondAttribute == .height)
+        #expect(constraint.multiplier == 2.0)
+    }
+
+    @Test("setAspectRatio disables autoresizing translation")
+    func setAspectRatioDisablesTAMIC() {
+        let view = ViewFixture.standalone()
+        view.translatesAutoresizingMaskIntoConstraints = true
+        _ = view.setAspectRatio(1)
+        #expect(view.translatesAutoresizingMaskIntoConstraints == false)
+    }
 }

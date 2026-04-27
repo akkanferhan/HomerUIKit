@@ -61,4 +61,48 @@ public extension UIView {
         heightAnchor.constraint(greaterThanOrEqualToConstant: height).isActive = true
         return self
     }
+
+    /// Pins the receiver's width to another view's width and
+    /// activates the constraint.
+    ///
+    /// Sets `translatesAutoresizingMaskIntoConstraints = false`. The
+    /// other view does not need to be a sibling — any view that
+    /// shares a layout hierarchy works. Use this to keep two
+    /// independently-positioned views the same width across
+    /// rotations and dynamic-type changes.
+    ///
+    /// ```swift
+    /// // Two columns that always match each other.
+    /// rightColumn.setWidth(equalTo: leftColumn)
+    /// ```
+    ///
+    /// - Parameter view: The reference view whose `widthAnchor`
+    ///   the receiver should match.
+    /// - Returns: `self`, so calls can be chained.
+    @discardableResult
+    func setWidth(equalTo view: UIView) -> Self {
+        translatesAutoresizingMaskIntoConstraints = false
+        widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+        return self
+    }
+
+    /// Constrains the receiver's width to be a multiple of its
+    /// height, activates the constraint, and returns it for further
+    /// tweaking.
+    ///
+    /// Sets `translatesAutoresizingMaskIntoConstraints = false`.
+    /// Pass `1.0` for a square, `16.0 / 9.0` for landscape video,
+    /// `4.0 / 3.0` for legacy photo, etc. The returned constraint
+    /// is activated; mutate its `priority` later to soften the
+    /// rule, or replace it entirely to animate ratio changes.
+    ///
+    /// - Parameter ratio: Width / height multiplier.
+    /// - Returns: The activated aspect-ratio constraint.
+    @discardableResult
+    func setAspectRatio(_ ratio: CGFloat) -> NSLayoutConstraint {
+        translatesAutoresizingMaskIntoConstraints = false
+        let constraint = widthAnchor.constraint(equalTo: heightAnchor, multiplier: ratio)
+        constraint.isActive = true
+        return constraint
+    }
 }
