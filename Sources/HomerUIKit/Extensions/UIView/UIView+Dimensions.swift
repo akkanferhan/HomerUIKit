@@ -86,6 +86,32 @@ public extension UIView {
         return self
     }
 
+    /// Pins the receiver's height to another view's height and
+    /// activates the constraint.
+    ///
+    /// Sets `translatesAutoresizingMaskIntoConstraints = false`. The
+    /// other view does not need to be a sibling — any view that
+    /// shares a layout hierarchy works. Symmetric counterpart to
+    /// ``setWidth(equalTo:)`` for vertical pairings such as a
+    /// scroll view's content view inheriting the scroll view's
+    /// own height.
+    ///
+    /// ```swift
+    /// // Image view that always matches the scroll view's height
+    /// // (used for centred-zoom layouts).
+    /// imageView.setHeight(equalTo: scrollView)
+    /// ```
+    ///
+    /// - Parameter view: The reference view whose `heightAnchor`
+    ///   the receiver should match.
+    /// - Returns: `self`, so calls can be chained.
+    @discardableResult
+    func setHeight(equalTo view: UIView) -> Self {
+        translatesAutoresizingMaskIntoConstraints = false
+        heightAnchor.constraint(equalTo: view.heightAnchor).isActive = true
+        return self
+    }
+
     /// Constrains the receiver's width to be a multiple of its
     /// height, activates the constraint, and returns it for further
     /// tweaking.
