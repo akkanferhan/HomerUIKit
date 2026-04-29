@@ -71,3 +71,45 @@ struct UILabelConvenienceTests {
         #expect(label.numberOfLines == 0)
     }
 }
+
+@Suite("UILabel Dynamic Type factory")
+@MainActor
+struct UILabelDynamicTypeTests {
+
+    @Test("dynamicType opts the label into content size category updates")
+    func dynamicTypeOptsIntoContentSizeUpdates() {
+        let label = UILabel.dynamicType(style: .body)
+        #expect(label.adjustsFontForContentSizeCategory)
+    }
+
+    @Test("dynamicType uses the requested text style for the font")
+    func dynamicTypeUsesRequestedTextStyle() {
+        let label = UILabel.dynamicType(style: .headline)
+        let style = label.font.fontDescriptor.object(forKey: .textStyle) as? String
+        #expect(style == UIFont.TextStyle.headline.rawValue)
+    }
+
+    @Test("dynamicType applies the supplied colour")
+    func dynamicTypeAppliesColor() {
+        let label = UILabel.dynamicType(style: .body, color: .secondaryLabel)
+        #expect(label.textColor == UIColor.secondaryLabel)
+    }
+
+    @Test("dynamicType defaults numberOfLines to 0 (multi-line)")
+    func dynamicTypeDefaultsToMultiLine() {
+        let label = UILabel.dynamicType(style: .body)
+        #expect(label.numberOfLines == 0)
+    }
+
+    @Test("dynamicType honours an overridden numberOfLines")
+    func dynamicTypeHonoursOverriddenLineCount() {
+        let label = UILabel.dynamicType(style: .body, numberOfLines: 2)
+        #expect(label.numberOfLines == 2)
+    }
+
+    @Test("dynamicType honours an overridden text alignment")
+    func dynamicTypeHonoursOverriddenAlignment() {
+        let label = UILabel.dynamicType(style: .body, textAlignment: .center)
+        #expect(label.textAlignment == .center)
+    }
+}

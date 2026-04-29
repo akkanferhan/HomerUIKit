@@ -49,4 +49,48 @@ public extension UILabel {
         self.textAlignment = textAlignment
         self.numberOfLines = numberOfLines
     }
+
+    /// Creates a label preconfigured for Dynamic Type:
+    /// `preferredFont(forTextStyle:)` plus
+    /// `adjustsFontForContentSizeCategory = true`.
+    ///
+    /// Prefer this factory over the generic
+    /// ``init(text:font:textColor:textAlignment:numberOfLines:)`` when
+    /// the label needs to scale with the user's content size
+    /// preferences — accessibility callers rely on it.
+    ///
+    /// ```swift
+    /// let title = UILabel.dynamicType(style: .headline)
+    /// let caption = UILabel.dynamicType(
+    ///     style: .footnote,
+    ///     color: .secondaryLabel,
+    ///     numberOfLines: 2,
+    ///     textAlignment: .center
+    /// )
+    /// ```
+    ///
+    /// - Parameters:
+    ///   - style: The Dynamic Type text style driving the label's font.
+    ///   - color: Text colour, defaulting to ``UIColor/label``.
+    ///   - numberOfLines: Maximum line count; `0` allows unlimited
+    ///     wrapping. Defaults to `0` (multi-line) since most Dynamic
+    ///     Type labels need to wrap at larger content sizes.
+    ///   - textAlignment: Horizontal alignment, defaulting to
+    ///     ``NSTextAlignment/natural``.
+    /// - Returns: A configured `UILabel`.
+    static func dynamicType(
+        style: UIFont.TextStyle,
+        color: UIColor = .label,
+        numberOfLines: Int = 0,
+        textAlignment: NSTextAlignment = .natural
+    ) -> UILabel {
+        let label = UILabel(
+            font: .preferredFont(forTextStyle: style),
+            textColor: color,
+            textAlignment: textAlignment,
+            numberOfLines: numberOfLines
+        )
+        label.adjustsFontForContentSizeCategory = true
+        return label
+    }
 }
