@@ -90,6 +90,41 @@ struct UIViewDimensionsTests {
         #expect(returned === child)
     }
 
+    // MARK: setHeight(equalTo:)
+
+    @Test("setHeight(equalTo:) installs an equal-height constraint between two views")
+    func setHeightEqualToInstallsConstraint() throws {
+        let (child, container) = ViewFixture.parented()
+        let sibling = UIView(frame: CGRect(origin: .zero, size: CGSize(width: 100, height: 100)))
+        container.addSubview(sibling)
+        child.setHeight(equalTo: sibling)
+        let constraint = try #require(container.constraints.first {
+            $0.firstAttribute == .height && $0.relation == .equal && $0.secondAttribute == .height
+        })
+        #expect(constraint.isActive)
+        #expect(constraint.firstItem === child)
+        #expect(constraint.secondItem === sibling)
+    }
+
+    @Test("setHeight(equalTo:) disables autoresizing translation")
+    func setHeightEqualToDisablesTAMIC() {
+        let (child, container) = ViewFixture.parented()
+        let sibling = UIView()
+        container.addSubview(sibling)
+        child.translatesAutoresizingMaskIntoConstraints = true
+        child.setHeight(equalTo: sibling)
+        #expect(child.translatesAutoresizingMaskIntoConstraints == false)
+    }
+
+    @Test("setHeight(equalTo:) returns self for chaining")
+    func setHeightEqualToIsChainable() {
+        let (child, container) = ViewFixture.parented()
+        let sibling = UIView()
+        container.addSubview(sibling)
+        let returned = child.setHeight(equalTo: sibling)
+        #expect(returned === child)
+    }
+
     // MARK: setAspectRatio
 
     @Test("setAspectRatio installs a width-to-height multiplier constraint")
