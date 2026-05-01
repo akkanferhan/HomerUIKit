@@ -25,4 +25,24 @@ public extension UIStackView {
             addArrangedSubview(view)
         }
     }
+
+    /// Removes every arranged subview from the stack and detaches it
+    /// from the regular view hierarchy.
+    ///
+    /// `UIStackView.removeArrangedSubview(_:)` only stops the stack from
+    /// *arranging* a view; the view stays in ``UIView/subviews`` and
+    /// remains visible at its last laid-out frame. This helper does
+    /// both halves of the cleanup so the stack ends up empty — the
+    /// equivalent UIKit idiom every consumer eventually reinvents.
+    ///
+    /// ```swift
+    /// stack.removeAllArrangedSubviews()
+    /// stack.addArrangedSubviews(model.rows.map(RowView.init))
+    /// ```
+    func removeAllArrangedSubviews() {
+        for view in arrangedSubviews {
+            removeArrangedSubview(view)
+            view.removeFromSuperview()
+        }
+    }
 }
