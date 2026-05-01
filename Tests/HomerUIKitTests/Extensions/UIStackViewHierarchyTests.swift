@@ -53,4 +53,34 @@ struct UIStackViewHierarchyTests {
         stack.addArrangedSubviews(later)
         #expect(stack.arrangedSubviews == [first, later])
     }
+
+    // MARK: removeAllArrangedSubviews
+
+    @Test("removeAllArrangedSubviews empties arrangedSubviews")
+    func removeAllEmptiesArrangement() {
+        let stack = UIStackView()
+        stack.addArrangedSubviews(UIView(), UIView(), UIView())
+        #expect(stack.arrangedSubviews.count == 3)
+        stack.removeAllArrangedSubviews()
+        #expect(stack.arrangedSubviews.isEmpty)
+    }
+
+    @Test("removeAllArrangedSubviews also detaches views from the regular hierarchy")
+    func removeAllDetachesFromSubviews() {
+        let stack = UIStackView()
+        let a = UIView(), b = UIView()
+        stack.addArrangedSubviews(a, b)
+        stack.removeAllArrangedSubviews()
+        #expect(stack.subviews.contains(a) == false)
+        #expect(stack.subviews.contains(b) == false)
+        #expect(a.superview == nil)
+        #expect(b.superview == nil)
+    }
+
+    @Test("removeAllArrangedSubviews on an empty stack is a no-op")
+    func removeAllOnEmptyStackNoCrash() {
+        let stack = UIStackView()
+        stack.removeAllArrangedSubviews()
+        #expect(stack.arrangedSubviews.isEmpty)
+    }
 }
