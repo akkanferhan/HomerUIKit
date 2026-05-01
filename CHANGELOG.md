@@ -6,6 +6,95 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-05-01
+
+### Added
+
+- **`UIControl.addAction(for:_:)`** — closure-based wrapper around the
+  iOS 14+ `addAction(_:for:)` API. Internally creates a `UIAction` whose
+  handler bridges to a `@MainActor` closure via `MainActor.assumeIsolated`,
+  matching the concurrency contract used by ``UIView/animate(_:animations:completion:)``.
+  Returns the created `UIAction` so callers can later detach it via
+  `removeAction(_:for:)`. Removes the target/action selector boilerplate
+  from every UIControl call site.
+- **`UIButton` factories — `.filled / .tinted / .plain / .bordered`** —
+  thin wrappers around `UIButton.Configuration` presets bundled with
+  `title`, `image`, and `tintColor`. Match the surface of
+  ``UIImageView/aspectFill(cornerRadius:backgroundColor:)`` and
+  ``UIActivityIndicatorView/make(style:color:hidesWhenStopped:)``.
+- **`UIView.embed(_:insets:)` / `embed(_:spacing:)`** — adds a child as
+  a subview and pins it to all four edges in a single call. Returns the
+  embedded child for chaining or inline configuration.
+- **`UIView.removeAllSubviews()`** — empties the receiver's
+  ``UIView/subviews`` in declaration order. Iterates the snapshotted
+  array so removals during iteration are safe.
+- **`UIStackView.removeAllArrangedSubviews()`** — removes every arranged
+  subview *and* detaches each from the regular subview hierarchy.
+  `UIStackView.removeArrangedSubview(_:)` only stops arranging a view;
+  the view stays in ``UIView/subviews`` and remains visible at its last
+  laid-out frame, the UIKit pitfall every consumer eventually
+  rediscovers.
+- **`UIScrollView.scrollToTop(animated:)` / `scrollToBottom(animated:)`** —
+  account for the adjusted content inset (safe area, content inset,
+  keyboard avoidance combined). `scrollToBottom` falls back to the
+  top offset when content is shorter than the bounds, so the call is
+  always a no-op-or-snap rather than a layout-thrashing jump.
+- **`UIViewController.attachChild(_:in:insets:)` / `detachFromParent()`** —
+  collapses the canonical UIKit three-step containment dance
+  (`addChild` → add `view` to host + pin → `didMove(toParent:)`) and its
+  symmetric removal into single calls, so consumers cannot silently
+  skip a step. `attachChild` defaults to pinning the child's view to
+  the receiver's own ``UIViewController/view`` but accepts a custom
+  container.
+
+### Tests
+
+- 28 new `@Test`s across 6 new suites (``UIControlActionTests``,
+  ``UIButtonFactoryTests``, ``UIViewEmbedTests``, ``UIScrollViewScrollTests``,
+  ``UIViewControllerChildContainmentTests``, plus 3 new tests on the
+  existing ``UIStackView`` hierarchy suite). Total: 241 tests across
+  34 suites, 0 warnings.
+
+## [0.7.0] — 2026-04-30
+
+### Added
+
+- **`UIView.setHeight(equalTo:)`** — pins the receiver's height to
+  another view's height via `heightAnchor.constraint(equalTo:)`.
+  Symmetric counterpart to ``UIView/setWidth(equalTo:)`` for vertical
+  pairings such as a scroll view's content view inheriting the scroll
+  view's own height. Returns `self` for chaining.
+
+## [0.6.0] — 2026-04-29
+
+### Added
+
+- **`UILabel.dynamicType(style:color:numberOfLines:textAlignment:)`** —
+  factory preconfigured for Dynamic Type
+  (`preferredFont(forTextStyle:)` plus
+  `adjustsFontForContentSizeCategory = true`). Defaults to
+  multi-line wrapping (`numberOfLines = 0`) since Dynamic Type
+  typically needs to wrap at larger content sizes.
+- **`UIImageView.aspectFill(cornerRadius:backgroundColor:)`** —
+  factory configured for `scaleAspectFill` content with
+  `clipsToBounds = true`, an optional corner radius, and a
+  placeholder background colour for the asynchronously-loaded
+  thumbnail tile pattern.
+- **`UIActivityIndicatorView.make(style:color:hidesWhenStopped:)`** —
+  factory bundling style, tint colour, and stop behaviour into a
+  single call.
+- **`UIView.setWidth(equalTo:)`** — pins the receiver's width to
+  another view's width via `widthAnchor.constraint(equalTo:)`.
+- **`UICollectionView.register(_:ofKind:)` / `dequeueReusableSupplementaryView(ofKind:for:)`** —
+  symmetric counterpart to ``register(_:)`` / ``dequeueReusableCell(for:)``
+  for headers and footers. Uses `T.description()` as the reuse identifier
+  and traps with a clear diagnostic when registration is missing.
+- **`unsupportedCoderInit(file:line:)`** (`Helpers/CoderInit.swift`) —
+  replaces the boilerplate `init?(coder:)` storyboard trap on
+  programmatic UIKit views and view controllers. The trap reports
+  the call site (`#fileID` / `#line`) so debugging surfaces the
+  offending subclass.
+
 ## [0.5.0] — 2026-04-27
 
 ### Added
@@ -127,7 +216,10 @@ Initial release. UIKit extensions and design tokens for the Homer suite, built o
 - `border(_:)` does not auto-refresh `borderColor` on trait-collection changes (light/dark mode); re-apply in `traitCollectionDidChange(_:)` if you need it.
 - No `UIStackView.addArrangedSubviews(_:)` helper yet.
 
-[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerUIKit/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/akkanferhan/HomerUIKit/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/akkanferhan/HomerUIKit/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/akkanferhan/HomerUIKit/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/akkanferhan/HomerUIKit/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/akkanferhan/HomerUIKit/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/akkanferhan/HomerUIKit/releases/tag/0.3.0

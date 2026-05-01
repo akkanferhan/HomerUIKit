@@ -5,7 +5,7 @@ Modern Swift 6 / iOS 18 UIKit kit for the Homer suite of Apple apps. A consolida
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+
 - **Tests:** Swift Testing
-- **Status:** `0.3.0` — public API documented with DocC, 136 tests, 0 warnings
+- **Status:** `0.8.0` — public API documented with DocC, 241 tests, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.3.0")
+    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.8.0")
 ]
 ```
 
@@ -158,6 +158,12 @@ child.centerInSuperview()
 ```swift
 container.addSubviews(headerLabel, bodyLabel, footerView)
 container.addSubviews([item1, item2])      // array overload
+
+// Add and pin in a single call:
+container.embed(card, insets: UIEdgeInsets(all: .medium))
+container.embed(card, spacing: .medium)    // token overload
+
+container.removeAllSubviews()              // empties subviews in declaration order
 ```
 
 ### Dimensions
@@ -186,6 +192,55 @@ let raw = UIEdgeInsets(horizontal: 13, vertical: 7)  // escape hatch
 let stack = UIStackView()
 stack.addArrangedSubviews(headerLabel, divider, bodyLabel)
 stack.addArrangedSubviews([item1, item2])  // array overload
+
+// Empties arrangedSubviews *and* removes them from the regular subview
+// hierarchy — `removeArrangedSubview(_:)` alone leaves them parented.
+stack.removeAllArrangedSubviews()
+```
+
+## `UIControl` / `UIButton` extensions
+
+Closure-based action handlers and `UIButton.Configuration` factories so
+the target/action selector boilerplate disappears from call sites.
+
+```swift
+button.addAction(for: .touchUpInside) { [weak self] _ in
+    self?.handleTap()
+}
+
+let save = UIButton.filled(title: "Save", image: UIImage(systemName: "checkmark"))
+let cancel = UIButton.tinted(title: "Cancel", tintColor: .systemRed)
+let skip = UIButton.plain(title: "Skip")
+let info = UIButton.bordered(title: "Learn more")
+```
+
+`addAction(for:_:)` returns the created `UIAction` so callers can detach
+it later via `removeAction(_:for:)`.
+
+## `UIScrollView` extensions
+
+```swift
+scrollView.scrollToTop()                   // animated by default
+scrollView.scrollToBottom(animated: false)
+```
+
+Both helpers honour the adjusted content inset (safe area + content
+inset + keyboard avoidance combined). `scrollToBottom` snaps to the top
+offset when content is shorter than the bounds, so the call is always a
+no-op-or-snap rather than a layout-thrashing jump.
+
+## `UIViewController` extensions
+
+Single-call equivalents of the canonical UIKit child-containment dance —
+`addChild` → add `view` to host + pin → `didMove(toParent:)` — and its
+symmetric removal:
+
+```swift
+attachChild(headerVC, in: headerContainer)
+attachChild(content)                        // pinned to self.view
+attachChild(banner, insets: UIEdgeInsets(all: .small))
+
+child.detachFromParent()                    // willMove → removeFromSuperview → removeFromParent
 ```
 
 ## `UIColor` extensions
