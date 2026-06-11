@@ -1,4 +1,5 @@
 import CoreGraphics
+import HomerFoundation
 
 /// A semantic alpha (opacity) token.
 ///
@@ -62,7 +63,7 @@ public enum Alpha: Sendable, Hashable, CaseIterable {
         case .p80: return 0.8
         case .p90: return 0.9
         case .p100: return 1.0
-        case .custom(let value): return min(1, max(0, value))
+        case .custom(let value): return value.clamped(to: 0...1)
         }
     }
 }

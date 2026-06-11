@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Hand-rolled `min(1, max(0, …))` clamps in `Alpha.custom` and
+  `DesignColor`'s component normalisation now go through
+  HomerFoundation's `Comparable.clamped(to:)`, and `AlertManager`'s
+  queue guard reads via `isNotEmpty` — internal adoption of the
+  dependency's helpers, no behaviour change.
+
 ## [0.9.0] — 2026-06-11
 
 ### Added
