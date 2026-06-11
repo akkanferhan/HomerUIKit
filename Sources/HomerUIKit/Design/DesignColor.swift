@@ -1,3 +1,4 @@
+import HomerFoundation
 import UIKit
 
 /// A semantic colour from the design system.
@@ -101,5 +102,5 @@ public indirect enum DesignColor: Sendable, Hashable {
 }
 
 private func clamp(_ value: Double) -> CGFloat {
-    CGFloat(min(1, max(0, value)))
+    CGFloat(value.clamped(to: 0...1))
 }

@@ -76,7 +76,7 @@ private extension AlertManager {
 
     func presentNextIfNeeded() {
         guard !isPresenting else { return }
-        guard !queue.isEmpty else {
+        guard queue.isNotEmpty else {
             tearDownWindow()
             return
         }
