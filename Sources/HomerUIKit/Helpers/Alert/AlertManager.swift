@@ -36,8 +36,30 @@ public final class AlertManager: AlertManagerProtocol {
     private var queue: [any AlertConfigurable] = []
     private var isPresenting = false
     private var alertWindow: UIWindow?
+    private var sceneActivationObserver: NotificationObserverToken?
 
-    public init() {}
+    /// Number of configurations waiting to be presented. Internal so
+    /// tests can assert that the no-scene path re-queues (rather than
+    /// drops) configurations.
+    var pendingAlertCount: Int { queue.count }
+
+    public init() {
+        // Alerts enqueued before any scene reaches `.foregroundActive`
+        // (e.g. during app launch) are re-queued by `present(_:)`; this
+        // observer drains them as soon as a scene becomes available.
+        sceneActivationObserver = NotificationObserverToken(
+            NotificationCenter.default.addObserver(
+                forName: UIScene.didActivateNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                // Safe: the observer block is delivered on the main queue.
+                MainActor.assumeIsolated {
+                    self?.presentNextIfNeeded()
+                }
+            }
+        )
+    }
 
     public func enqueue(_ configuration: any AlertConfigurable) {
         queue.append(configuration)
@@ -65,12 +87,12 @@ private extension AlertManager {
 
     func present(_ configuration: any AlertConfigurable) {
         guard let scene = UIApplication.shared.activeForegroundWindowScene else {
-            isPresenting = false
+            requeue(configuration)
             return
         }
         let window = obtainWindow(in: scene)
         guard let host = window.rootViewController else {
-            isPresenting = false
+            requeue(configuration)
             return
         }
 
@@ -87,6 +109,16 @@ private extension AlertManager {
         }
         configurePopover(alert: alert, host: host)
         host.present(alert, animated: true)
+    }
+
+    /// Puts a configuration that could not be presented (no
+    /// foreground-active scene yet) back at the front of the queue, so
+    /// it is retried — in its original order — when a scene activates
+    /// or the next `enqueue` pumps the queue. Without this, dequeued
+    /// configurations were silently dropped during app launch.
+    func requeue(_ configuration: any AlertConfigurable) {
+        queue.insert(configuration, at: 0)
+        isPresenting = false
     }
 
     func handleDismissal() {

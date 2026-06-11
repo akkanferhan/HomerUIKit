@@ -93,4 +93,35 @@ public extension UILabel {
         label.adjustsFontForContentSizeCategory = true
         return label
     }
+
+    /// ``TextStyle``-token overload of
+    /// ``dynamicType(style:color:numberOfLines:textAlignment:)``.
+    /// The token parameter is unlabelled so leading-dot call sites of
+    /// the `UIFont.TextStyle` overload stay unambiguous.
+    ///
+    /// Named tiers scale with Dynamic Type exactly like the
+    /// `UIFont.TextStyle` overload. A ``TextStyle/custom(size:weight:)``
+    /// token produces a fixed-size label — `adjustsFontForContentSizeCategory`
+    /// is still set, but UIKit only scales fonts that carry a text-style
+    /// association, so the custom escape hatch stays at its designed size.
+    ///
+    /// ```swift
+    /// let title = UILabel.dynamicType(.headline)
+    /// let badge = UILabel.dynamicType(.custom(size: 11, weight: .semibold))
+    /// ```
+    static func dynamicType(
+        _ style: TextStyle,
+        color: UIColor = .label,
+        numberOfLines: Int = 0,
+        textAlignment: NSTextAlignment = .natural
+    ) -> UILabel {
+        let label = UILabel(
+            font: style.font,
+            textColor: color,
+            textAlignment: textAlignment,
+            numberOfLines: numberOfLines
+        )
+        label.adjustsFontForContentSizeCategory = true
+        return label
+    }
 }

@@ -5,7 +5,7 @@ Modern Swift 6 / iOS 18 UIKit kit for the Homer suite of Apple apps. A consolida
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+
 - **Tests:** Swift Testing
-- **Status:** `0.8.0` — public API documented with DocC, 241 tests, 0 warnings
+- **Status:** `0.9.0` — public API documented with DocC, 258 tests, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.8.0")
+    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.9.0")
 ]
 ```
 
@@ -66,6 +66,19 @@ let r = CornerRadius.medium.resolved(forHeight: 0)  // 8
 ### `AnimationDuration`
 
 `.fast (0.15) / .standard (0.25) / .slow (0.40) / .custom(TimeInterval)`. `allCases` enumerates only the pre-baked tiers.
+
+### `TextStyle`
+
+Semantic typography tiers mapping one-to-one onto `UIFont.TextStyle`
+(`.largeTitle` … `.caption2`), so fonts participate in Dynamic Type via
+`preferredFont(forTextStyle:)`. `.custom(size:weight:)` is the explicit
+fixed-size escape hatch — it deliberately does not scale.
+
+```swift
+let title = UILabel.dynamicType(.headline)
+let badge = UILabel.dynamicType(.custom(size: 11, weight: .semibold))
+let font = TextStyle.body.font
+```
 
 ### `Alpha`
 

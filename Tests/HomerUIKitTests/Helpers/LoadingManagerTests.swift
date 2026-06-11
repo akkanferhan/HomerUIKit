@@ -64,4 +64,34 @@ struct LoadingManagerTests {
         manager.configure(with: TestLoadingConfig(loadingIndicatorHasBackground: false))
         manager.configure(with: TestLoadingConfig(loadingIndicatorHasBackground: true))
     }
+
+    @Test("show without a scene preserves the reference count")
+    func showWithoutScenePreservesCount() {
+        let manager = LoadingManager()
+        manager.show()
+        #expect(manager.activeLoadingCount == 1,
+                "A scene-less show() must keep the balance so hide() pairing stays intact")
+        manager.show()
+        #expect(manager.activeLoadingCount == 2)
+    }
+
+    @Test("show/hide pairing balances back to zero without a scene")
+    func showHidePairingBalancesWithoutScene() {
+        let manager = LoadingManager()
+        manager.show()
+        manager.show()
+        manager.hide()
+        #expect(manager.activeLoadingCount == 1)
+        manager.hide()
+        #expect(manager.activeLoadingCount == 0)
+    }
+
+    @Test("forceHide zeroes a scene-less accumulated count")
+    func forceHideZeroesAccumulatedCount() {
+        let manager = LoadingManager()
+        manager.show()
+        manager.show()
+        manager.forceHide()
+        #expect(manager.activeLoadingCount == 0)
+    }
 }

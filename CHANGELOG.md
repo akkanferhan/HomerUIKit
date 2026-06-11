@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-06-11
+
+### Added
+
+- **`TextStyle`** — the typography design token that closes the last gap
+  in the `Design/` system (alongside `Spacing`, `CornerRadius`, `Alpha`,
+  `AnimationDuration`, `BorderStyle`, `ShadowStyle`, `DesignColor`).
+  Eleven named tiers map one-to-one onto `UIFont.TextStyle`, so
+  ``TextStyle/font`` participates in Dynamic Type via
+  `preferredFont(forTextStyle:)`; `.custom(size:weight:)` is the
+  explicit fixed-size escape hatch, mirroring the other tokens'
+  `custom` cases. Comes with a `UILabel.dynamicType(_:color:numberOfLines:textAlignment:)`
+  overload (token parameter unlabelled so existing
+  `UIFont.TextStyle` call sites stay unambiguous).
+
+### Fixed
+
+- **`LoadingManager` no longer zeroes its reference count when no scene
+  is foreground-active.** A `show()` issued during app launch used to
+  reset the balance and bail — the indicator never appeared once a scene
+  arrived, and the caller's paired `hide()` became a stray no-op,
+  desyncing subsequent show/hide cycles. The balance is now preserved
+  and a `UIScene.didActivateNotification` observer presents the pending
+  indicator as soon as a scene becomes available (mirroring the
+  `AlertManager` fix). The shared observer-token box moved to
+  `Internal/NotificationObserverToken.swift`; the internal
+  `activeLoadingCount` hook lets tests assert the pairing.
+- **`AlertManager` no longer silently drops alerts enqueued before a
+  scene is foreground-active** (typical during app launch). `present(_:)`
+  used to dequeue a configuration, fail the scene guard, and return —
+  losing the alert forever. The configuration is now re-queued at the
+  front in its original order, and a `UIScene.didActivateNotification`
+  observer drains the queue as soon as a scene becomes available. The
+  internal `pendingAlertCount` hook lets tests assert the re-queue path.
+
 ## [0.8.0] — 2026-05-01
 
 ### Added
