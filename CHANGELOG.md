@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **`TextStyle`** — the typography design token that closes the last gap
+  in the `Design/` system (alongside `Spacing`, `CornerRadius`, `Alpha`,
+  `AnimationDuration`, `BorderStyle`, `ShadowStyle`, `DesignColor`).
+  Eleven named tiers map one-to-one onto `UIFont.TextStyle`, so
+  ``TextStyle/font`` participates in Dynamic Type via
+  `preferredFont(forTextStyle:)`; `.custom(size:weight:)` is the
+  explicit fixed-size escape hatch, mirroring the other tokens'
+  `custom` cases. Comes with a `UILabel.dynamicType(_:color:numberOfLines:textAlignment:)`
+  overload (token parameter unlabelled so existing
+  `UIFont.TextStyle` call sites stay unambiguous).
+
 ### Fixed
 
 - **`LoadingManager` no longer zeroes its reference count when no scene
