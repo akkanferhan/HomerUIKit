@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **`AlertManager` no longer silently drops alerts enqueued before a
+  scene is foreground-active** (typical during app launch). `present(_:)`
+  used to dequeue a configuration, fail the scene guard, and return —
+  losing the alert forever. The configuration is now re-queued at the
+  front in its original order, and a `UIScene.didActivateNotification`
+  observer drains the queue as soon as a scene becomes available. The
+  internal `pendingAlertCount` hook lets tests assert the re-queue path.
+
 ## [0.8.0] — 2026-05-01
 
 ### Added

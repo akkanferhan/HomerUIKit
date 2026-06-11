@@ -37,6 +37,38 @@ struct AlertManagerTests {
         ))
     }
 
+    @Test("enqueue without a scene re-queues instead of dropping the configuration")
+    func enqueueWithoutSceneRequeues() {
+        let manager = AlertManager()
+        manager.enqueue(TestAlertConfig(
+            style: .alert, title: "Launch alert", message: nil, actions: []
+        ))
+        #expect(manager.pendingAlertCount == 1,
+                "A configuration that cannot present yet must stay queued for retry")
+    }
+
+    @Test("multiple scene-less enqueues all stay queued")
+    func multipleEnqueuesWithoutSceneStayQueued() {
+        let manager = AlertManager()
+        manager.enqueue(TestAlertConfig(
+            style: .alert, title: "A", message: nil, actions: []
+        ))
+        manager.enqueue(TestAlertConfig(
+            style: .alert, title: "B", message: nil, actions: []
+        ))
+        #expect(manager.pendingAlertCount == 2)
+    }
+
+    @Test("removeAll clears re-queued configurations")
+    func removeAllClearsRequeuedConfigurations() {
+        let manager = AlertManager()
+        manager.enqueue(TestAlertConfig(
+            style: .alert, title: "A", message: nil, actions: []
+        ))
+        manager.removeAll()
+        #expect(manager.pendingAlertCount == 0)
+    }
+
     @Test("removeAll does not crash on an empty queue")
     func removeAllOnEmptyQueueDoesNotCrash() {
         let manager = AlertManager()
