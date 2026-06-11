@@ -44,8 +44,30 @@ public final class LoadingManager: LoadingManagerProtocol {
     private var loadingCount: Int = .zero
     private var loadingWindow: UIWindow?
     private var indicatorHasBackground: Bool = true
+    private var sceneActivationObserver: NotificationObserverToken?
 
-    public init() {}
+    /// Current reference count. Internal so tests can assert that a
+    /// scene-less ``show()`` keeps (rather than zeroes) the balance.
+    var activeLoadingCount: Int { loadingCount }
+
+    public init() {
+        // A show() issued before any scene reaches `.foregroundActive`
+        // (e.g. during app launch) cannot present yet; this observer
+        // surfaces the indicator as soon as a scene becomes available,
+        // provided the balance is still positive.
+        sceneActivationObserver = NotificationObserverToken(
+            NotificationCenter.default.addObserver(
+                forName: UIScene.didActivateNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                // Safe: the observer block is delivered on the main queue.
+                MainActor.assumeIsolated {
+                    self?.presentPendingIndicatorIfNeeded()
+                }
+            }
+        )
+    }
 
     public func configure(with configuration: any LoadingConfigurable) {
         indicatorHasBackground = configuration.loadingIndicatorHasBackground
@@ -74,10 +96,22 @@ private extension LoadingManager {
 
     func presentIndicator() {
         guard let scene = UIApplication.shared.activeForegroundWindowScene else {
-            loadingCount = 0
+            // No scene yet (typical during launch). Keep the balance —
+            // the matching hide() calls still need to pair up — and let
+            // the scene-activation observer present once possible.
+            // Zeroing the count here used to both lose the indicator
+            // and desync callers' show/hide pairing.
             return
         }
         _ = obtainWindow(in: scene)
+    }
+
+    /// Presents the indicator for a balance that accumulated while no
+    /// scene was available. No-op when nothing is pending or a window
+    /// is already up.
+    func presentPendingIndicatorIfNeeded() {
+        guard loadingCount > 0, loadingWindow == nil else { return }
+        presentIndicator()
     }
 
     func obtainWindow(in scene: UIWindowScene) -> UIWindow {

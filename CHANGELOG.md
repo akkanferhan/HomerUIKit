@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **`LoadingManager` no longer zeroes its reference count when no scene
+  is foreground-active.** A `show()` issued during app launch used to
+  reset the balance and bail — the indicator never appeared once a scene
+  arrived, and the caller's paired `hide()` became a stray no-op,
+  desyncing subsequent show/hide cycles. The balance is now preserved
+  and a `UIScene.didActivateNotification` observer presents the pending
+  indicator as soon as a scene becomes available (mirroring the
+  `AlertManager` fix). The shared observer-token box moved to
+  `Internal/NotificationObserverToken.swift`; the internal
+  `activeLoadingCount` hook lets tests assert the pairing.
 - **`AlertManager` no longer silently drops alerts enqueued before a
   scene is foreground-active** (typical during app launch). `present(_:)`
   used to dequeue a configuration, fail the scene guard, and return —
