@@ -67,6 +67,19 @@ let r = CornerRadius.medium.resolved(forHeight: 0)  // 8
 
 `.fast (0.15) / .standard (0.25) / .slow (0.40) / .custom(TimeInterval)`. `allCases` enumerates only the pre-baked tiers.
 
+### `TextStyle`
+
+Semantic typography tiers mapping one-to-one onto `UIFont.TextStyle`
+(`.largeTitle` … `.caption2`), so fonts participate in Dynamic Type via
+`preferredFont(forTextStyle:)`. `.custom(size:weight:)` is the explicit
+fixed-size escape hatch — it deliberately does not scale.
+
+```swift
+let title = UILabel.dynamicType(.headline)
+let badge = UILabel.dynamicType(.custom(size: 11, weight: .semibold))
+let font = TextStyle.body.font
+```
+
 ### `Alpha`
 
 10 % increments from `.p10` (0.1) to `.p100` (1.0), plus `.custom(CGFloat)` clamped to `0...1` at resolve time.
