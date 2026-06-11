@@ -5,7 +5,7 @@ Modern Swift 6 / iOS 18 UIKit kit for the Homer suite of Apple apps. A consolida
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+
 - **Tests:** Swift Testing
-- **Status:** `0.8.0` — public API documented with DocC, 241 tests, 0 warnings
+- **Status:** `0.9.0` — public API documented with DocC, 258 tests, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.8.0")
+    .package(url: "https://github.com/akkanferhan/HomerUIKit.git", from: "0.9.0")
 ]
 ```
 
